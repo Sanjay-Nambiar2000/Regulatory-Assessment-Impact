@@ -1,0 +1,21 @@
+# --- Web ---
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+
+# --- LLM client ---
+openai==1.43.0
+python-dotenv==1.0.1
+
+# --- NLP / Math ---
+scikit-learn==1.5.2
+numpy==2.1.2
+
+# --- Parsers ---
+pypdf==4.3.1
+python-docx==1.1.2
+
+# --- PDF Generation ---
+reportlab==4.2.0
+
+# --- Validation ---
+pydantic>=2.8.0

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Rhonda — Regulatory Impact Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    :root{
+      --bg:#f6f8fb; --panel:#ffffff; --text:#0d1b2a; --muted:#576579; --border:#e6ebf2;
+      --accent:#0b6efd; --ok:#12a150; --warn:#d39e00; --bad:#d23d4e; --chip:#eef3fb;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial}
+    .wrap{max-width:1100px;margin:26px auto;padding:0 18px}
+    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+    .brand{display:flex;align-items:center;gap:10px}
+    .brand h2{margin:0;font-weight:700;letter-spacing:.2px}
+    .badge{display:inline-flex;align-items:center;gap:8px;background:var(--chip);border:1px solid var(--border);padding:6px 10px;border-radius:999px;color:var(--muted);font-size:12px}
+    .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .chip-btn{background:#e9eef7;color:#0b6efd;border:none;padding:8px 12px;border-radius:999px;font-weight:600;cursor:pointer}
+    .danger{background:#ffe6ea;color:#b3122b}
+
+    .layout{display:grid;grid-template-columns:340px 1fr;gap:16px}
+    .panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px}
+    .hint{color:var(--muted);font-size:13px}
+
+    .chat{display:flex;flex-direction:column;height:72vh}
+    .chat-feed{flex:1;overflow:auto;padding-right:4px}
+    .chat-input{display:flex;gap:10px;align-items:flex-end;margin-top:12px}
+    .chat-input textarea{flex:1;border:1px solid var(--border);border-radius:12px;padding:12px 12px 12px 14px;min-height:56px;max-height:160px;resize:vertical;background:#fff;color:var(--text);font-size:14px}
+    .send{background:var(--accent);color:#fff;border:none;padding:12px 16px;border-radius:10px;font-weight:600;cursor:pointer}
+    .send:disabled{opacity:.6;cursor:not-allowed}
+
+    .msg{margin:10px 0;display:flex;gap:10px}
+    .msg .avatar{width:28px;height:28px;border-radius:50%;background:#e9eef7;display:flex;align-items:center;justify-content:center;color:#0b6efd;font-weight:700;flex:none}
+    .msg.user .avatar{background:#ffe6e9;color:#d23d4e}
+    .bubble{background:#fff;border:1px solid var(--border);padding:12px 14px;border-radius:12px;max-width:720px}
+    .msg.user .bubble{background:#f4f8ff}
+
+    .badge-status{padding:3px 8px;border-radius:999px;font-weight:700;font-size:12px;border:1px solid transparent}
+    .Compliant{background:rgba(18,161,80,.08);color:var(--ok);border-color:rgba(18,161,80,.25)}
+    .Unclear{background:rgba(211,158,0,.08);color:var(--warn);border-color:rgba(211,158,0,.25)}
+    .Non-Compliant{background:rgba(210,61,78,.08);color:var(--bad);border-color:rgba(210,61,78,.25)}
+    .bar{height:6px;background:#eef3fb;border:1px solid var(--border);border-radius:999px;margin-top:10px;overflow:hidden}
+    .fill{height:100%}
+    .HIGH{background:var(--ok)} .MEDIUM{background:var(--warn)} .LOW{background:var(--bad)}
+    .bar-label{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-top:4px}
+    .section-title{font-weight:700;margin:12px 0 8px}
+    .evidence, .violations{border-left:3px solid #e6ebf2;padding-left:12px;margin-top:8px}
+    .list-item{margin:4px 0;color:var(--muted)}
+    .quote{font-style:italic;color:#2c3e55;margin-top:4px}
+
+    details.advanced{margin-top:12px;border:1px dashed var(--border);border-radius:10px;padding:10px;background:#fafcff}
+    details summary{cursor:pointer;font-weight:700;color:#234}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="brand">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="#0b6efd" xmlns="http://www.w3.org/2000/svg"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 5v6l5 3-.75 1.23L11 14V7h2z"/></svg>
+      <h2>Rhonda — Regulatory Impact Assistant</h2>
+    </div>
+    <div class="toolbar">
+      <label style="font-size:12px;color:#234;display:flex;gap:6px;align-items:center">
+        <input type="checkbox" id="useContext"/>
+        Link to previous message
+      </label>
+      <label style="font-size:12px;color:#234;display:flex;gap:6px;align-items:center">
+        <input type="checkbox" id="includeAdvanced" />
+        Include advanced details in PDF
+      </label>
+      <button id="pdfBtn" class="chip-btn">Export PDF</button>
+      <button id="clearBtn" class="chip-btn danger">Clear chat</button>
+      <span class="badge" id="healthBadge">Checking…</span>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <div style="font-weight:700;margin-bottom:8px">Helpful starters</div>
+      <div class="hint">
+        <div>• “Move controlled storage calibration to every 12 months. Is it compliant? Cite regulator clauses.”</div>
+        <div>• “For mobile collections at temporary sites, what temperature monitoring is required? Cite clause & page.”</div>
+        <div>• “If we introduce device X (class Y), list impacted SOPs and any conflicting requirements.”</div>
+      </div>
+    </div>
+
+    <div class="panel chat">
+      <div id="chatFeed" class="chat-feed"></div>
+      <div class="chat-input">
+        <textarea id="chatBox" placeholder="Type a request and press Enter…"></textarea>
+        <button id="sendBtn" class="send">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- API ---------- */
+const api = {
+  health: async () => (await fetch('/api/health')).json(),
+  query: async (q) => {
+    const fd = new FormData();
+    fd.append('question', q);
+    fd.append('top_k','6');
+    const r = await fetch('/api/query', { method: 'POST', body: fd });
+    if (!r.ok) throw new Error((await r.json()).detail || 'Request failed');
+    return await r.json();
+  },
+  pdf: async (payload) => {
+    const r = await fetch('/api/pdf', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    if (!r.ok) throw new Error('PDF export failed');
+    const blob = await r.blob(); const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url;
+    a.download = `RIA_Report_${new Date().toISOString().slice(0,10)}.pdf`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }
+};
+
+/* ---------- Chat state ---------- */
+const turns = []; // [{role:'user'|'assistant', content:string, raw?:object}]
+const FEED = document.getElementById('chatFeed');
+const BOX  = document.getElementById('chatBox');
+const SEND = document.getElementById('sendBtn');
+
+function escapeHtml(s){return (s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function scrollToBottom(){ FEED.scrollTop = FEED.scrollHeight; }
+
+/* ---------- Render bubbles ---------- */
+function addUserBubble(text){
+  const d = document.createElement('div');
+  d.className = 'msg user';
+  d.innerHTML = `<div class="avatar">U</div><div class="bubble">${escapeHtml(text)}</div>`;
+  FEED.appendChild(d); scrollToBottom();
+}
+
+function addAssistantBubble(payload){
+  const d = document.createElement('div'); d.className = 'msg assistant';
+  const b = document.createElement('div'); b.className = 'bubble';
+
+  let html = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <div class="avatar">R</div><div style="font-weight:700">Rhonda</div>
+      <span class="badge-status ${payload.compliance_status}">${payload.compliance_status}</span>
+    </div>
+    <div class="bar"><div class="fill ${payload.confidence_level}" style="width:${(payload.confidence_score*100)}%"></div></div>
+    <div class="bar-label"><span>Confidence: ${payload.confidence_level}</span><span>${(payload.confidence_score*100).toFixed(0)}%</span></div>
+    <div style="margin-top:12px">${escapeHtml(payload.answer || '')}</div>
+  `;
+
+  if (payload.citations && payload.citations.length){
+    html += `<div class="evidence"><div class="section-title">Evidence (exact sources)</div>`;
+    payload.citations.forEach((c,i)=>{
+      const t=c.doc_title||c.source||'Unknown', sec=c.section?` ${c.section}`:'';
+      const pg=c.page?` (p.${c.page})`:'', ver=c.version?` — ${c.version}`:'', eff=c.effective_date?` — effective ${c.effective_date}`:'';
+      html += `<div class="list-item"><b>[${i+1}] ${escapeHtml(t)}${escapeHtml(sec)}${escapeHtml(pg)}${escapeHtml(ver)}${escapeHtml(eff)}</b>`;
+      if (c.quote) html += `<div class="quote">"${escapeHtml(c.quote)}"</div>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (payload.violations && payload.violations.length){
+    html += `<div class="violations"><div class="section-title">Risks and non-compliances found</div>`;
+    payload.violations.forEach(v => html += `<div class="list-item">${escapeHtml(v)}</div>`);
+    html += `</div>`;
+  }
+
+  if (payload.recommendations && payload.recommendations.length){
+    html += `<div class="evidence"><div class="section-title">Practical alternatives / mitigations</div>`;
+    payload.recommendations.forEach(r => html += `<div class="list-item">${escapeHtml(r)}</div>`);
+    html += `</div>`;
+  }
+
+  // ----- Advanced (collapsed) -----
+  let adv = '';
+  if ((payload.traceability && payload.traceability.length) ||
+      (payload.versions && payload.versions.length) ||
+      (payload.conflicts && payload.conflicts.length)) {
+
+    adv += `<details class="advanced"><summary>Advanced details</summary>`;
+
+    if (payload.traceability && payload.traceability.length){
+      adv += `<div class="evidence"><div class="section-title">Evidence checklist (what we checked)</div>`;
+      payload.traceability.forEach(row=>{
+        adv += `<div class="list-item"><b>Requirement:</b> ${escapeHtml(row.requirement)} — <b>Status:</b> ${escapeHtml(row.status)}</div>`;
+        if (row.citations && row.citations.length){
+          adv += `<div style="margin-left:10px">`;
+          row.citations.forEach(c=>{
+            const t=c.doc_title||'Unknown', sec=c.section?` ${c.section}`:'', pg=c.page?` (p.${c.page})`:'';
+            adv += `<div class="list-item">• ${escapeHtml(t)}${escapeHtml(sec)}${escapeHtml(pg)}</div>`;
+          });
+          adv += `</div>`;
+        }
+      });
+      adv += `</div>`;
+    }
+
+    if (payload.versions && payload.versions.length){
+      adv += `<div class="evidence"><div class="section-title">Source versions</div>`;
+      payload.versions.forEach(v=>{
+        let line = `${escapeHtml(v.doc_title||'')}`;
+        if (v.hierarchy) line += ` — ${escapeHtml(v.hierarchy)}`;
+        if (v.version) line += ` — ${escapeHtml(v.version)}`;
+        if (v.effective_date) line += ` (effective ${escapeHtml(v.effective_date)})`;
+        adv += `<div class="list-item">${line}</div>`;
+      });
+      adv += `</div>`;
+    }
+
+    if (payload.conflicts && payload.conflicts.length){
+      adv += `<div class="violations"><div class="section-title">Possible source clashes</div>`;
+      payload.conflicts.forEach(c=>{
+        const what = c.what_clashes || c.topic_hint || '';
+        adv += `<div class="list-item"><b>What clashes:</b> ${escapeHtml(what)}</div>`;
+        if (c.a) {
+          const aPg = c.a.page ? ` (p.${c.a.page})` : '';
+          const aSec = c.a.section ? ` ${c.a.section}` : '';
+          adv += `<div class="list-item">• A: ${escapeHtml(c.a.doc || '')} (${escapeHtml(c.a.hierarchy || '')})${escapeHtml(aSec)}${escapeHtml(aPg)}</div>`;
+        }
+        if (c.b) {
+          const bPg = c.b.page ? ` (p.${c.b.page})` : '';
+          const bSec = c.b.section ? ` ${c.b.section}` : '';
+          adv += `<div class="list-item">• B: ${escapeHtml(c.b.doc || '')} (${escapeHtml(c.b.hierarchy || '')})${escapeHtml(bSec)}${escapeHtml(bPg)}</div>`;
+        }
+        if (c.resolution_hint){
+          adv += `<div class="list-item"><i>Suggested resolution:</i> ${escapeHtml(c.resolution_hint)}</div>`;
+        }
+      });
+      adv += `</div>`;
+    }
+
+    adv += `</details>`;
+  }
+
+  if (payload.escalate_to_human){
+    html += `<div class="evidence"><div class="section-title">Human review required</div>
+      <div class="list-item">A qualified regulatory professional must validate this assessment.</div></div>`;
+  }
+
+  b.innerHTML = html + adv;
+  d.appendChild(b); FEED.appendChild(d); scrollToBottom();
+}
+
+/* ---------- Similarity + context strategy ---------- */
+function similarity(a,b){
+  const toSet = s => new Set((s||'').toLowerCase()
+    .replace(/[^a-z0-9\s]/g,' ')
+    .split(/\s+/)
+    .filter(w=>w.length>2));
+  const A = toSet(a), B = toSet(b);
+  const inter = [...A].filter(x=>B.has(x)).length;
+  const union = new Set([...A, ...B]).size || 1;
+  return inter/union; // 0..1
+}
+const UNRELATED_THRESHOLD = 0.12; // guard even when "Link to previous" is on
+
+function buildContextPrompt(latest){
+  // Default: NO CONTEXT to guarantee identical results for identical prompts
+  const link = document.getElementById('useContext').checked;
+  if (!link) return latest;
+
+  // If linking is enabled, still avoid bleeding unrelated topics
+  const maxTurns = 6;
+  const recent = turns.slice(-maxTurns);
+  const lastQ = [...recent].reverse().find(t => t.role==='user')?.content || '';
+  const sim = similarity(latest, lastQ);
+  const unrelated = sim < UNRELATED_THRESHOLD;
+  if (unrelated) return latest;
+
+  const ctx = recent.map(t => `${t.role.toUpperCase()}: ${t.content}`).join('\n');
+  return ctx ? `Context from prior messages:\n${ctx}\n\nLatest request:\n${latest}` : latest;
+}
+
+/* ---------- Send ---------- */
+async function send(){
+  const raw = BOX.value.trim(); if(!raw) return;
+  addUserBubble(raw); turns.push({role:'user', content: raw});
+  BOX.value=''; BOX.focus(); SEND.disabled = true;
+  try{
+    const composed = buildContextPrompt(raw);
+    const data = await api.query(composed);
+    turns.push({role:'assistant', content: data.answer, raw: data});
+    addAssistantBubble(data);
+  }catch(e){
+    const err = {answer:`Error: ${e.message}`, compliance_status:'Unclear', confidence_score:0, confidence_level:'LOW', citations:[], violations:[], recommendations:[], traceability:[], versions:[], conflicts:[], escalate_to_human:false};
+    turns.push({role:'assistant', content: err.answer, raw: err});
+    addAssistantBubble(err);
+  }finally{ SEND.disabled = false; }
+}
+
+/* ---------- Clear chat ---------- */
+function clearChat(){
+  turns.length = 0;
+  FEED.innerHTML = '';
+  document.getElementById('useContext').checked = false;
+  document.getElementById('includeAdvanced').checked = false;
+  BOX.value = '';
+  BOX.focus();
+}
+document.getElementById('clearBtn').addEventListener('click', clearChat);
+
+/* ---------- Export PDF ---------- */
+document.getElementById('pdfBtn').addEventListener('click', async ()=>{
+  const latest = [...turns].reverse().find(t => t.role === 'assistant')?.raw;
+  if (!latest) { alert('Run an analysis first.'); return; }
+  latest.include_advanced = document.getElementById('includeAdvanced').checked;
+  try { await api.pdf(latest); } catch(e){ alert(e.message || 'PDF export failed'); }
+});
+
+/* ---------- Wiring ---------- */
+SEND.addEventListener('click', send);
+BOX.addEventListener('keydown', (ev)=>{
+  if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); send(); }
+});
+
+/* Health badge */
+async function refreshHealth(){
+  try{
+    const h = await api.health();
+    document.getElementById('healthBadge').textContent = h.ready ? `Ready — ${h.chunks} chunks` : 'Server Offline or Index Missing';
+  }catch{ document.getElementById('healthBadge').textContent = 'Server Offline'; }
+}
+refreshHealth(); setInterval(refreshHealth, 30000);
+</script>
+</body>
+</html>
