@@ -1,0 +1,3 @@
+﻿- 2060 ms | status=Compliant | cites=3 | conflicts=0 | review=False | hash=812e3081f62792c6f9e642bcb6c3b2fb7048597ff9d56e4dee4e06000f22ee5e | According to the Australian Code of GMP (2013), what must be recorded
+- 2081 ms | status=Compliant | cites=3 | conflicts=0 | review=False | hash=9cf569e8b5498a0122fae2628864248f24d4f685ead4de61c5351fd1c235f77c | What are the general requirements for testing blood samples of donors?
+- 1438 ms | status=Compliant | cites=3 | conflicts=0 | review=False | hash=05f9880f7817283b1a7d1d194f4b4f7474f62ca8c37898d4d25be81b2fb | [truncated question text]

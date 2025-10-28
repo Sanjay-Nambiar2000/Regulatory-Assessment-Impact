@@ -1,0 +1,9 @@
+{
+  "created_at": "2025-10-24T00:13:13.128030Z",
+  "total_chunks": 272,
+  "total_documents": 193,
+  "chunk_size": 420,
+  "chunk_overlap": 60,
+  "vocabulary_size": 9182,
+  "vector_dimensions": 9182
+}
