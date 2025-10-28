@@ -1,0 +1,2 @@
+n_requests,p50_ms,p90_ms,p99_ms,avg_citations_per_answer,conflicts_detected_total,verdict_Compliant
+3,2060,2076,2080,3.0,0,3

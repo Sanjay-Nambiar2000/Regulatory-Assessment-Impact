@@ -1,0 +1,50 @@
+# Rhonda RIA System - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# Web Framework
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+
+# LLM Client
+openai==1.40.0
+httpx==0.27.0
+
+# NLP / Machine Learning
+scikit-learn==1.5.2
+numpy==2.1.2
+
+# Document Parsers
+pypdf==4.3.1
+python-docx==1.1.2
+
+# PDF Generation
+reportlab==4.2.0
+
+# Data Validation
+pydantic>=2.8.0
+
+# Optional but Recommended for Production
+# Uncomment these if deploying to production:
+
+# Security & Authentication
+# python-jose[cryptography]==3.3.0
+# passlib[bcrypt]==1.7.4
+
+# Rate Limiting
+# slowapi==0.1.9
+
+# Monitoring & Logging
+# prometheus-client==0.19.0
+
+# Testing
+# pytest==7.4.3
+# httpx==0.25.2
+# pytest-asyncio==0.21.1
+
+# Database (if using PostgreSQL instead of SQLite)
+# psycopg2-binary==2.9.9
+
+# Azure Integration (when migrating to Azure)
+# azure-identity==1.15.0
+# azure-keyvault-secrets==4.7.0
+# azure-storage-blob==12.19.0

@@ -1,0 +1,4 @@
+timestamp,query_text,query_hash,compliance_verdict,cites,conflicts,response_time_ms,review_required,confidence_score
+,"According to the Australian Code of GMP (2013), what must be recorded",812e3081f62792c6f9e642bcb6c3b2fb7048597ff9d56e4dee4e06000f22ee5e,Compliant,3,0,2060.0,False,
+,What are the general requirements for testing blood samples of donors?,9cf569e8b5498a0122fae2628864248f24d4f685ead4de61c5351fd1c235f77c,Compliant,3,0,2081.0,False,
+,[truncated question text],05f9880f7817283b1a7d1d194f4b4f7474f62ca8c37898d4d25be81b2fb,Compliant,3,0,1438.0,False,
